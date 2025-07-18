@@ -38,8 +38,10 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
     }
     
     if(!pClient->isConnected()) {
-        BLE_HID_DEBUG("failed to connect");
-        goto cleanup1;
+        if(!pClient->connect(advDevice)) {
+            BLE_HID_DEBUG("failed to connect");
+            goto cleanup1;
+        }
     }
 
     pSvc = pClient->getService("1812");
