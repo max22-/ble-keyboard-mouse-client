@@ -70,9 +70,3 @@ BLEMouse& BLEHIDClient::get_mouse() {
     return mouse;
 }
 
-/*
-void BLEHIDClient::handle_scan_results(const NimBLEScanResults& results) {
-
-}
-*/
-
