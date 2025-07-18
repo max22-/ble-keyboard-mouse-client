@@ -55,6 +55,7 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
 
     for (auto* chr : pSvc->getCharacteristics(true)) {
         if(chr->getUUID() == NimBLEUUID("2a4d") && chr->canNotify()) {
+            BLE_HID_DEBUG("subsribing to a 0x2a4d characteristic");
             if(!chr->subscribe(true, [this](NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
                 this->handle_report(pData, length);
             })) {
