@@ -105,6 +105,8 @@ const char* BLEKeyboardClient::keyboard_name() {
 }
 
 bool BLEKeyboardClient::connect() {
+    NimBLERemoteService *pSvc = nullptr;
+    bool characteristic_found = false;
     if(!keyboard_found()) {
         Serial.println("no keyboard found");
         return false;
@@ -133,16 +135,15 @@ bool BLEKeyboardClient::connect() {
         goto cleanup2;
     }
 
-    pChr = nullptr;
     for (auto* chr : pSvc->getCharacteristics(true)) {
         if(chr->getUUID() == NimBLEUUID("2a4d") && chr->canNotify()) {
             if(!chr->subscribe(true, notifyCB)) {
                 Serial.println("failed to subscribe");
             }
-            pChr = chr;
+            characteristic_found = true;
         }
     }
-    if(!pChr) {
+    if(!characteristic_found) {
         Serial.println("characteristic not found");
         goto cleanup2;
     }
@@ -152,7 +153,6 @@ cleanup2:
     pClient->disconnect();
 cleanup1:
     pSvc = nullptr;
-    pChr = nullptr;
     NimBLEDevice::deleteClient(pClient);
     pClient = nullptr;
     return false;

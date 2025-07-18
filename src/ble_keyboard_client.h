@@ -25,9 +25,6 @@ protected:
     NimBLEScan *pScan = nullptr;
     BLEKeyboardClientScanCallbacks scan_callbacks;
     NimBLEClient *pClient = nullptr;
-    NimBLERemoteService *pSvc = nullptr;
-    NimBLERemoteCharacteristic *pChr = nullptr;
-    NimBLERemoteDescriptor *pDsc = nullptr;
 };
 
 #endif
