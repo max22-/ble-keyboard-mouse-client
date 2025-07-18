@@ -1,159 +1,68 @@
 #include "ble_hid_client.h"
 
-class ClientCallbacks : public NimBLEClientCallbacks {
-    void onConnect(NimBLEClient* pClient) override { Serial.printf("Connected\n"); }
-
-    void onDisconnect(NimBLEClient* pClient, int reason) override {
-        Serial.printf("%s Disconnected, reason = %d\n", pClient->getPeerAddress().toString().c_str(), reason);
-        //NimBLEDevice::getScan()->start(scanTimeMs, false, true);
-    }
-
-    /** Pairing process complete, we can check the results in connInfo */
-    void onAuthenticationComplete(NimBLEConnInfo& connInfo) override {
-        Serial.println("onAuthenticationComplete");
-        Serial.printf("authenticated: %d, bonded: %d, encrypted: %d, key size: %u\n",
-            connInfo.isAuthenticated(),
-            connInfo.isBonded(),
-            connInfo.isEncrypted(),
-            connInfo.getSecKeySize()
-        );
-        if (!connInfo.isEncrypted()) {
-            Serial.printf("Encrypt connection failed - disconnecting\n");
-            /** Find the client with the connection handle provided in connInfo */
-            NimBLEDevice::getClientByHandle(connInfo.getConnHandle())->disconnect();
-            return;
-        }
-    }
-} ClientCallbacks;
-
-
-
-
-
-
-
-
-
-
-void BLEHIDClientScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
-    Serial.printf("device found: %s (appearance = 0x%x)\n", advertisedDevice->toString().c_str(), advertisedDevice->getAppearance());
-    if(advertisedDevice->isAdvertisingService(NimBLEUUID("1812"))) {
-        NimBLEDevice::getScan()->stop();
-        device = advertisedDevice;
-    }
-}
-
-void BLEHIDClientScanCallbacks::onScanEnd(const NimBLEScanResults& results, int reason) {
-    Serial.println("scan end");
-}
-
-const NimBLEAdvertisedDevice* BLEHIDClientScanCallbacks::get_device() {
-        return device;
-}
-
-
-static void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    std::string str  = (isNotify == true) ? "Notification" : "Indication";
-    str             += " from ";
-    str             += pRemoteCharacteristic->getClient()->getPeerAddress().toString();
-    str             += ": Service = " + pRemoteCharacteristic->getRemoteService()->getUUID().toString();
-    str             += ", Characteristic = " + pRemoteCharacteristic->getUUID().toString();
-    //str             += ", Value = " + std::string((char*)pData, length);
-    Serial.printf("%s\n", str.c_str());
-    for(size_t i = 0; i < length; i++) {
-        Serial.printf("0x%02x ", pData[i]);
-    }
-    Serial.println();
-}
-
-
-void BLEHIDClient::begin(const char *device_name) {
+void BLEHIDClient::begin(const char *device_name, bool keyboard_enabled, bool mouse_enabled) {
     NimBLEDevice::init(device_name);
     NimBLEDevice::setSecurityAuth(false, false, false);
     NimBLEDevice::setSecurityPasskey(123456);
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY);
-}
-
-
-/**
- * @brief Start scanning.
- * @param [in] duration The duration in milliseconds for which to scan. 0 == scan forever.
- * @return True if scan started or false if there was an error.
- */
-bool BLEHIDClient::start_scan(uint32_t duration) {
+    this->keyboard_enabled = keyboard_enabled;
+    this->mouse_enabled = mouse_enabled;
     pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scan_callbacks, false);
     pScan->setInterval(100);
     pScan->setWindow(100);
     pScan->setActiveScan(true);
-    Serial.println("starting scan");
-    return pScan->start(duration);
+    if(this->keyboard_enabled || this->mouse_enabled)
+        pScan->start(BLE_HID_SCAN_DURATION);
 }
 
-bool BLEHIDClient::is_scanning() {
-    return pScan && pScan->isScanning();
-}
-
-bool BLEHIDClient::keyboard_found() {
-    return scan_callbacks.get_device() != nullptr;
-}
-
-const char* BLEHIDClient::keyboard_name() {
-    const NimBLEAdvertisedDevice *device = scan_callbacks.get_device();
-    if(device) return device->getName().c_str();
-    else return nullptr;
-}
-
-bool BLEHIDClient::connect() {
-    NimBLERemoteService *pSvc = nullptr;
-    bool characteristic_found = false;
-    if(!keyboard_found()) {
-        Serial.println("no keyboard found");
-        return false;
-    }
-    if(!pClient) {
-        if(NimBLEDevice::getCreatedClientCount() >= NIMBLE_MAX_CONNECTIONS) {
-            Serial.println("too many clients");
-            return false;
-        }
-        pClient = NimBLEDevice::createClient();
-        pClient->setClientCallbacks(&ClientCallbacks, false);
-        pClient->setConnectionParams(12, 12, 0, 150);
-        pClient->setConnectTimeout(5000);
-        if(!pClient->connect(scan_callbacks.get_device())) {
-            Serial.println("failed to connect");
-            goto cleanup1;
-        }
-    }
-    if(!pClient->isConnected()) {
-        Serial.println("failed to connect");
-        return false;
-    }
-    pSvc = pClient->getService("1812");
-    if(!pSvc) {
-        Serial.println("service not found");
-        goto cleanup2;
-    }
-
-    for (auto* chr : pSvc->getCharacteristics(true)) {
-        if(chr->getUUID() == NimBLEUUID("2a4d") && chr->canNotify()) {
-            if(!chr->subscribe(true, notifyCB)) {
-                Serial.println("failed to subscribe");
+void BLEHIDClient::loop() {
+    if(!(keyboard_enabled || mouse_enabled)) return;
+    const NimBLEScanResults *results = scan_callbacks.results;
+    scan_callbacks.results = nullptr;
+    if(results) {
+        for(auto device: *results) {
+            if(device->isAdvertisingService(NimBLEUUID("1812"))) {
+                uint16_t appearance = device->getAppearance();
+                if(appearance == 0x3c1 && keyboard_enabled && !keyboard.is_connected()) {
+                    BLE_HID_DEBUG("found a keyboard: 0x%x", device);
+                    keyboard.connect(device);
+                } else if(appearance == 0x3c2 && mouse_enabled && !mouse.is_connected()) {
+                    BLE_HID_DEBUG("found a mouse: 0x%x", device);
+                    mouse.connect(device);
+                }
             }
-            characteristic_found = true;
         }
     }
-    if(!characteristic_found) {
-        Serial.println("characteristic not found");
-        goto cleanup2;
-    }
-    return true;
-
-cleanup2:
-    pClient->disconnect();
-cleanup1:
-    pSvc = nullptr;
-    NimBLEDevice::deleteClient(pClient);
-    pClient = nullptr;
-    return false;
 }
+
+void BLEHIDClient::enable_keyboard() {
+    keyboard_enabled = true;
+}
+
+void BLEHIDClient::disable_keyboard() {
+    keyboard_enabled = false;
+}
+
+BLEKeyboard& BLEHIDClient::get_keyboard() {
+    return keyboard;
+}
+
+void BLEHIDClient::enable_mouse() {
+    mouse_enabled = true;
+}
+
+void BLEHIDClient::disable_mouse() {
+    mouse_enabled = false;
+}
+
+BLEMouse& BLEHIDClient::get_mouse() {
+    return mouse;
+}
+
+/*
+void BLEHIDClient::handle_scan_results(const NimBLEScanResults& results) {
+
+}
+*/
+
