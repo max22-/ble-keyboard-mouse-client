@@ -47,6 +47,15 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
         }
     }
 
+    // TODO: check if this is really needed
+    if(!pClient->secureConnection()) {
+        BLE_HID_DEBUG("failed to enable secure connection");
+        goto cleanup2;
+    } else {
+        BLE_HID_DEBUG("secure connection enabled");
+    }
+
+
     pSvc = pClient->getService("1812");
     if(!pSvc) {
         BLE_HID_DEBUG("service not found");
