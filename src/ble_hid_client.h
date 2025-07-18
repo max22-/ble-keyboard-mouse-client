@@ -4,6 +4,7 @@
 #include <NimBLEDevice.h>
 
 #define BLE_HID_SCAN_DURATION 5000
+#define BLE_HID_SCAN_PERIOD 10000
 
 class BLEHIDClient;
 
@@ -64,9 +65,11 @@ public:
     BLEMouse& get_mouse();
 
 private:
-
     NimBLEScan *pScan = nullptr;
     BLEHIDClientScanCallbacks scan_callbacks;
+    void start_scan();
+    unsigned long last_scan = 0;
+
     NimBLEClient *pClient = nullptr;
 
     bool keyboard_enabled = false;

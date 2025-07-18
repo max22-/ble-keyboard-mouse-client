@@ -13,7 +13,7 @@ void BLEHIDClient::begin(const char *device_name, bool keyboard_enabled, bool mo
     pScan->setWindow(100);
     pScan->setActiveScan(true);
     if(this->keyboard_enabled || this->mouse_enabled)
-        pScan->start(BLE_HID_SCAN_DURATION);
+        start_scan();
 }
 
 void BLEHIDClient::loop() {
@@ -33,6 +33,16 @@ void BLEHIDClient::loop() {
                 }
             }
         }
+    } else if((keyboard_enabled && !keyboard.is_connected()) || (mouse_enabled && !mouse.is_connected())) {
+        start_scan();
+    }
+}
+
+void BLEHIDClient::start_scan() {
+    if(last_scan == 0 || (millis() - last_scan >= BLE_HID_SCAN_PERIOD)) {
+        BLE_HID_DEBUG("starting scan");
+        last_scan = millis();
+        pScan->start(BLE_HID_SCAN_DURATION);
     }
 }
 
