@@ -70,8 +70,6 @@ private:
     void start_scan();
     unsigned long last_scan = 0;
 
-    NimBLEClient *pClient = nullptr;
-
     bool keyboard_enabled = false;
     BLEKeyboard keyboard;
 
