@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "ble_keyboard_client.h"
+#include "ble_hid_client.h"
 
 #define FATAL(...) \
   do { \
@@ -9,7 +9,7 @@
     for(;;) delay(1000); \
   } while(0)
 
-BLEKeyboardClient kbd;
+BLEHIDClient kbd;
 
 void setup() {
   Serial.begin(115200);

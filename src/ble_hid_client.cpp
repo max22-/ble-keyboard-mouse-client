@@ -1,4 +1,4 @@
-#include "ble_keyboard_client.h"
+#include "ble_hid_client.h"
 
 class ClientCallbacks : public NimBLEClientCallbacks {
     void onConnect(NimBLEClient* pClient) override { Serial.printf("Connected\n"); }
@@ -35,7 +35,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 
 
-void BLEKeyboardClientScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
+void BLEHIDClientScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
     Serial.printf("device found: %s (appearance = 0x%x)\n", advertisedDevice->toString().c_str(), advertisedDevice->getAppearance());
     if(advertisedDevice->isAdvertisingService(NimBLEUUID("1812"))) {
         NimBLEDevice::getScan()->stop();
@@ -43,11 +43,11 @@ void BLEKeyboardClientScanCallbacks::onResult(const NimBLEAdvertisedDevice* adve
     }
 }
 
-void BLEKeyboardClientScanCallbacks::onScanEnd(const NimBLEScanResults& results, int reason) {
+void BLEHIDClientScanCallbacks::onScanEnd(const NimBLEScanResults& results, int reason) {
     Serial.println("scan end");
 }
 
-const NimBLEAdvertisedDevice* BLEKeyboardClientScanCallbacks::get_device() {
+const NimBLEAdvertisedDevice* BLEHIDClientScanCallbacks::get_device() {
         return device;
 }
 
@@ -67,7 +67,7 @@ static void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t*
 }
 
 
-void BLEKeyboardClient::begin(const char *device_name) {
+void BLEHIDClient::begin(const char *device_name) {
     NimBLEDevice::init(device_name);
     NimBLEDevice::setSecurityAuth(false, false, false);
     NimBLEDevice::setSecurityPasskey(123456);
@@ -80,7 +80,7 @@ void BLEKeyboardClient::begin(const char *device_name) {
  * @param [in] duration The duration in milliseconds for which to scan. 0 == scan forever.
  * @return True if scan started or false if there was an error.
  */
-bool BLEKeyboardClient::start_scan(uint32_t duration) {
+bool BLEHIDClient::start_scan(uint32_t duration) {
     pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(&scan_callbacks, false);
     pScan->setInterval(100);
@@ -90,21 +90,21 @@ bool BLEKeyboardClient::start_scan(uint32_t duration) {
     return pScan->start(duration);
 }
 
-bool BLEKeyboardClient::is_scanning() {
+bool BLEHIDClient::is_scanning() {
     return pScan && pScan->isScanning();
 }
 
-bool BLEKeyboardClient::keyboard_found() {
+bool BLEHIDClient::keyboard_found() {
     return scan_callbacks.get_device() != nullptr;
 }
 
-const char* BLEKeyboardClient::keyboard_name() {
+const char* BLEHIDClient::keyboard_name() {
     const NimBLEAdvertisedDevice *device = scan_callbacks.get_device();
     if(device) return device->getName().c_str();
     else return nullptr;
 }
 
-bool BLEKeyboardClient::connect() {
+bool BLEHIDClient::connect() {
     NimBLERemoteService *pSvc = nullptr;
     bool characteristic_found = false;
     if(!keyboard_found()) {

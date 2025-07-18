@@ -1,9 +1,9 @@
-#ifndef BLE_KEYBOARD_CLIENT_H
-#define BLE_KEYBOARD_CLIENT_H
+#ifndef BLE_HID_CLIENT_H
+#define BLE_HID_CLIENT_H
 
 #include <NimBLEDevice.h>
 
-class BLEKeyboardClientScanCallbacks : public NimBLEScanCallbacks {
+class BLEHIDClientScanCallbacks : public NimBLEScanCallbacks {
 public:
     const NimBLEAdvertisedDevice* get_device();
 private:
@@ -12,7 +12,7 @@ private:
     const NimBLEAdvertisedDevice* device = nullptr;
 };
 
-class BLEKeyboardClient {
+class BLEHIDClient {
 public:
     void begin(const char *device_name);
     bool start_scan(uint32_t duration);
@@ -23,7 +23,7 @@ public:
 
 protected:
     NimBLEScan *pScan = nullptr;
-    BLEKeyboardClientScanCallbacks scan_callbacks;
+    BLEHIDClientScanCallbacks scan_callbacks;
     NimBLEClient *pClient = nullptr;
 };
 
