@@ -7,8 +7,10 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
     pClient = nullptr;
 
     if(NimBLEDevice::getCreatedClientCount()) {
+        BLE_HID_DEBUG("we should reuse a client");
         pClient = NimBLEDevice::getClientByPeerAddress(advDevice->getAddress());
         if(pClient) {
+            BLE_HID_DEBUG("we already know the client");
             if(!pClient->connect(advDevice, false)) {
                 BLE_HID_DEBUG("failed to reconnect");
                 return false;
@@ -20,12 +22,13 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
     }
 
     if(!pClient) {
+        BLE_HID_DEBUG("no client to reuse, creating a new one");
         if(NimBLEDevice::getCreatedClientCount() >= NIMBLE_MAX_CONNECTIONS) {
             BLE_HID_DEBUG("too many clients");
             return false;
         }
-        BLE_HID_DEBUG("creating a new client");
         pClient = NimBLEDevice::createClient();
+        BLE_HID_DEBUG("new client created");
         BLE_HID_DEBUG("pClient = 0x%x", pClient);
         pClient->setClientCallbacks(&callbacks, false);
         pClient->setConnectionParams(12, 12, 0, 150);
