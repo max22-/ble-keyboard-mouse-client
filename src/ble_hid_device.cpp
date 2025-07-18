@@ -63,6 +63,13 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
     }
 
     for (auto* chr : pSvc->getCharacteristics(true)) {
+        if(chr->getUUID() == NimBLEUUID("2a4d")) {
+            BLE_HID_DEBUG("found a 2a4d characteristic");
+            if(chr->canNotify())
+                BLE_HID_DEBUG("this characteristic can notify");
+            else
+                BLE_HID_DEBUG("this characteristic can't notify");
+        }
         if(chr->getUUID() == NimBLEUUID("2a4d") && chr->canNotify()) {
             BLE_HID_DEBUG("subsribing to a 0x2a4d characteristic");
             if(!chr->subscribe(true, [this](NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
@@ -77,6 +84,9 @@ bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
         BLE_HID_DEBUG("characteristic not found");
         goto cleanup2;
     }
+    BLE_HID_DEBUG("advertised device address: %s", advDevice->getAddress().toString().c_str());
+    BLE_HID_DEBUG("peer address: %s", pClient->getPeerAddress().toString().c_str());
+    
     return true;
 
 cleanup2:
