@@ -8,33 +8,6 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         //NimBLEDevice::getScan()->start(scanTimeMs, false, true);
     }
 
-    bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
-        // Failing to accepts parameters may result in the remote device
-        // disconnecting.
-        return true;
-    };
-
-    /********************* Security handled here *********************/
-
-    void onConfirmPasskey(NimBLEConnInfo& connInfo, uint32_t pass_key) override {
-        Serial.printf("The passkey YES/NO number: %" PRIu32 "\n", pass_key);
-        /** Inject false if passkeys don't match. */
-        NimBLEDevice::injectConfirmPasskey(connInfo, true);
-    }
-
-    uint32_t onPassKeyRequest(){
-        Serial.println("Client Passkey Request");
-        /** return the passkey to send to the server */
-        return 123456;
-    };
-
-    bool onConfirmPIN(uint32_t pass_key) {
-        Serial.print("The passkey YES/NO number: ");
-        Serial.println(pass_key);
-        /** Return false if passkeys don't match. */
-        return true;
-    };
-
     /** Pairing process complete, we can check the results in connInfo */
     void onAuthenticationComplete(NimBLEConnInfo& connInfo) override {
         Serial.println("onAuthenticationComplete");
@@ -63,7 +36,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 
 void BLEKeyboardClientScanCallbacks::onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
-    Serial.printf("device found: %s\n", advertisedDevice->toString().c_str());
+    Serial.printf("device found: %s (appearance = 0x%x)\n", advertisedDevice->toString().c_str(), advertisedDevice->getAppearance());
     if(advertisedDevice->isAdvertisingService(NimBLEUUID("1812"))) {
         NimBLEDevice::getScan()->stop();
         device = advertisedDevice;
@@ -132,9 +105,6 @@ const char* BLEKeyboardClient::keyboard_name() {
 }
 
 bool BLEKeyboardClient::connect() {
-    NimBLERemoteDescriptor *desc;
-    const uint8_t ON[] = {0x1, 0x0};
-
     if(!keyboard_found()) {
         Serial.println("no keyboard found");
         return false;
@@ -176,25 +146,6 @@ bool BLEKeyboardClient::connect() {
         Serial.println("characteristic not found");
         goto cleanup2;
     }
-    //if(!pChr->canNotify()) {
-    //    Serial.println("characteristic cannot notify");
-    //    goto cleanup2;
-    //}
-    //if(!pChr->subscribe(true, notifyCB)) {
-    //    Serial.println("failed to subscribe");
-    //    goto cleanup2;
-    //}
-
-    //desc = pChr->getDescriptor(NimBLEUUID("2902"));
-    //if(!desc) {
-    //    Serial.println("failed to find descriptor");
-    //    goto cleanup2;
-    //}
-    //if(!desc->writeValue(ON, sizeof(ON))) {
-    //    Serial.println("failed to write to descriptor");
-    //    goto cleanup2;
-    //}
-
     return true;
 
 cleanup2:
