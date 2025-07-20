@@ -88,11 +88,16 @@ private:
     BLEMouse mouse;
 };
 
+#ifdef BLE_HID_DEBUG_ENABLED
 #define BLE_HID_DEBUG(...) \
   do { \
     Serial.printf("%s:%d: ", __FILE__, __LINE__); \
     Serial.printf(__VA_ARGS__); \
     Serial.println(); \
   } while(0)
+
+#else
+#define BLE_HID_DEBUG(...) do {} while(0)
+#endif
 
 #endif
