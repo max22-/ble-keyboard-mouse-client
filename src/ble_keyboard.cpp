@@ -1,6 +1,6 @@
 #include "ble_hid_client.h"
 
-void BLEKeyboard::on_key_pressed(std::function<void (uint8_t)> callback) {
+void BLEKeyboard::on_key_pressed(std::function<void (bool, uint8_t)> callback) {
     BLE_HID_DEBUG("setting key pressed callback");
     key_pressed_callback = callback;
     if(key_pressed_callback)
@@ -9,7 +9,7 @@ void BLEKeyboard::on_key_pressed(std::function<void (uint8_t)> callback) {
         BLE_HID_DEBUG("failure");
 }
 
-void BLEKeyboard::on_key_released(std::function<void (uint8_t)> callback) {
+void BLEKeyboard::on_key_released(std::function<void (bool, uint8_t)> callback) {
     BLE_HID_DEBUG("setting key released callback");
     key_released_callback = callback;
 }
@@ -20,6 +20,22 @@ void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
         Serial.printf("0x%02x ", report[i]);
     }
     Serial.println();
+
+    if(report[0] != modifiers_states) {
+        uint8_t pressed = ~modifiers_states & report[0];
+        uint8_t released = modifiers_states & ~report[0];
+        for(int i = 0; i < 8; i++) {
+            uint8_t m = 1 << i;
+            if(released & m)
+                key_released_callback(true, m);
+        }
+        for(int i = 0; i < 8; i++) {
+            uint8_t m = 1 << i;
+            if(pressed & m)
+                key_pressed_callback(true, m);
+        }
+        modifiers_states = report[0];
+    }
 
     for(int i = 1; i < ARRAY_SIZE(keys_states);  i++) {
         if(keys_states[i]) {
@@ -34,7 +50,7 @@ void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
                 BLE_HID_DEBUG("key 0x%02x released", i);
                 keys_states[i] = false;
                 if(key_released_callback)
-                    key_released_callback(i);
+                    key_released_callback(false, i);
                 else 
                     BLE_HID_DEBUG("key released callback not set ");
             }
@@ -46,7 +62,7 @@ void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
             BLE_HID_DEBUG("key 0x%02x pressed", k);
             keys_states[k] = true;
             if(key_pressed_callback)
-                key_pressed_callback(k);
+                key_pressed_callback(false, k);
             else 
                 BLE_HID_DEBUG("key pressed callback not set");
         }

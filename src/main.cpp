@@ -1,16 +1,22 @@
 #include <Arduino.h>
 #include "ble_hid_client.h"
 
-
-
 BLEHIDClient hid;
 
-void on_key_pressed(uint8_t k) {
-  Serial.printf("key 0x%02x pressed !\n", k);
+void on_key_pressed(bool is_modifier, uint8_t k) {
+  if(is_modifier) {
+    Serial.printf("modifier 0x%02x pressed !\n", k);
+  } else {
+    Serial.printf("key 0x%02x pressed !\n", k);
+  }
 }
 
-void on_key_released(uint8_t k) {
-  Serial.printf("key 0x%02x released !\n", k);
+void on_key_released(bool is_modifier, uint8_t k) {
+  if(is_modifier) {
+    Serial.printf("modifier 0x%02x released !\n", k);
+  } else {
+    Serial.printf("key 0x%02x released !\n", k);
+  }
 }
 
 void setup() {
