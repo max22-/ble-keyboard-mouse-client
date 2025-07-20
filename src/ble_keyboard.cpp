@@ -1,5 +1,19 @@
 #include "ble_hid_client.h"
 
+void BLEKeyboard::on_key_pressed(std::function<void (uint8_t)> callback) {
+    BLE_HID_DEBUG("setting key pressed callback");
+    key_pressed_callback = callback;
+    if(key_pressed_callback)
+        BLE_HID_DEBUG("success");
+    else
+        BLE_HID_DEBUG("failure");
+}
+
+void BLEKeyboard::on_key_released(std::function<void (uint8_t)> callback) {
+    BLE_HID_DEBUG("setting key released callback");
+    key_released_callback = callback;
+}
+
 void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
     Serial.print("keyboard : ");
     for(size_t i = 0; i < len; i++) {
@@ -19,13 +33,24 @@ void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
             if(!found) {
                 BLE_HID_DEBUG("key 0x%02x released", i);
                 keys_states[i] = false;
+                if(key_released_callback)
+                    key_released_callback(i);
+                else 
+                    BLE_HID_DEBUG("key released callback not set ");
             }
         }
     }
     for(int j = 2; j < len; j++) {
-        if(report[j] != 0 && !keys_states[report[j]])
-            BLE_HID_DEBUG("key 0x%02x pressed", report[j]);
-        keys_states[report[j]] = true;
+        uint8_t k = report[j];
+        if(k != 0 && !keys_states[k]) {
+            BLE_HID_DEBUG("key 0x%02x pressed", k);
+            keys_states[k] = true;
+            if(key_pressed_callback)
+                key_pressed_callback(k);
+            else 
+                BLE_HID_DEBUG("key pressed callback not set");
+        }
+        
     }
 }
 
@@ -46,4 +71,11 @@ bool BLEKeyboard::connect(const NimBLEAdvertisedDevice* advDevice) {
         return false;
     }
     return true;
+}
+
+void BLEKeyboard::debug() {
+    if(key_pressed_callback)
+        BLE_HID_DEBUG("key_pressed_callback is set");
+    else
+        BLE_HID_DEBUG("key_pressed_callback is not set");
 }

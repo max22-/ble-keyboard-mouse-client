@@ -41,11 +41,17 @@ private:
 };
 
 class BLEKeyboard : public BLEHIDDevice {
+public:
+    void on_key_pressed(std::function<void (uint8_t)>);
+    void on_key_released(std::function<void (uint8_t)>);
+    void debug();
 private:
     void handle_report(uint8_t *report, size_t len) override;
     bool connect(const NimBLEAdvertisedDevice* advDevice) override;
-    friend class BLEHIDClient;
+    std::function<void (uint8_t)> key_pressed_callback;
+    std::function<void (uint8_t)> key_released_callback;
     bool keys_states[256] = {false};
+    friend class BLEHIDClient;
 };
 
 class BLEMouse : public BLEHIDDevice {
