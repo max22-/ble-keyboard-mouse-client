@@ -15,6 +15,7 @@ void BLEKeyboard::on_key_released(std::function<void (bool, uint8_t)> callback) 
 }
 
 void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
+    if(len != 8) return;
     Serial.print("keyboard : ");
     for(size_t i = 0; i < len; i++) {
         Serial.printf("0x%02x ", report[i]);
