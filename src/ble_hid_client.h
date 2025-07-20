@@ -29,8 +29,9 @@ private:
 class BLEHIDDevice {
 protected:
     virtual void handle_report(uint8_t *report, size_t len) = 0;
+    virtual bool connect(const NimBLEAdvertisedDevice* advDevice);
+    NimBLERemoteService* pSvc = nullptr;
 private:
-    bool connect(const NimBLEAdvertisedDevice* advDevice);
     bool is_connected();
     NimBLEAdvertisedDevice *device = nullptr;
     NimBLEClient *pClient = nullptr;
@@ -40,15 +41,18 @@ private:
 };
 
 class BLEKeyboard : public BLEHIDDevice {
-
 private:
     void handle_report(uint8_t *report, size_t len) override;
+    bool connect(const NimBLEAdvertisedDevice* advDevice) override;
+    friend class BLEHIDClient;
 };
 
 class BLEMouse : public BLEHIDDevice {
-
 private:
     void handle_report(uint8_t *report, size_t len) override;
+    bool connect(const NimBLEAdvertisedDevice* advDevice) override;
+    void parse_report_descriptor(const uint8_t *desc, size_t len);
+    friend class BLEHIDClient;
 };
 
 class BLEHIDClient {

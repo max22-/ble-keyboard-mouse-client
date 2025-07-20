@@ -1,7 +1,7 @@
 #include "ble_hid_client.h"
 
 bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
-    NimBLERemoteService* pSvc = nullptr;
+    pSvc = nullptr;
     bool characteristic_found = false;
 
     pClient = nullptr;
