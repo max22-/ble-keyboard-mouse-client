@@ -21,7 +21,7 @@ void on_key_released(bool is_modifier, uint8_t k) {
 
 void setup() {
   Serial.begin(115200);
-  hid.begin("uxn", true, true);
+  hid.begin("BLE HID demo", true, true);
   BLEKeyboard& keyboard = hid.get_keyboard();
   keyboard.on_key_pressed(on_key_pressed);
   keyboard.on_key_released(on_key_released);
