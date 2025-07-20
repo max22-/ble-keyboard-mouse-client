@@ -23,12 +23,12 @@ void BLEHIDClient::loop() {
     if(results && results->getCount() > 0) {
         BLE_HID_DEBUG("found devices!!!");
         for(auto device: *results) {
-            bool device_known = NimBLEDevice::getClientByPeerAddress(device->getAddress()) != nullptr;
-            if(device_known)
-                BLE_HID_DEBUG("the device is already known");
+            bool is_bonded = NimBLEDevice::isBonded(device->getAddress());
+            if(is_bonded)
+                BLE_HID_DEBUG("the device is bonded");
             else
-                BLE_HID_DEBUG("the device is unknown");
-            if(device->isAdvertisingService(NimBLEUUID("1812")) || device_known) {
+                BLE_HID_DEBUG("the device is not bonded");
+            if(device->isAdvertisingService(NimBLEUUID("1812")) || is_bonded) {
                 uint16_t appearance = device->getAppearance();
                 if(appearance == 0x3c1 && keyboard_enabled && !keyboard.is_connected()) {
                     BLE_HID_DEBUG("found a keyboard: 0x%x", device);
