@@ -37,7 +37,6 @@ void setup() {
   BLEKeyboard& keyboard = hid.get_keyboard();
   keyboard.on_key_pressed(on_key_pressed);
   keyboard.on_key_released(on_key_released);
-  keyboard.debug();
 }
 
 void loop() {

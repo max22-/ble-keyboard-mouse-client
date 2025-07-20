@@ -84,10 +84,3 @@ bool BLEKeyboard::connect(const NimBLEAdvertisedDevice* advDevice) {
     }
     return true;
 }
-
-void BLEKeyboard::debug() {
-    if(key_pressed_callback)
-        BLE_HID_DEBUG("key_pressed_callback is set");
-    else
-        BLE_HID_DEBUG("key_pressed_callback is not set");
-}
