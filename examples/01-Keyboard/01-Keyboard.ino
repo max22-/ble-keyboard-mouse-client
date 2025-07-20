@@ -29,5 +29,5 @@ void setup() {
 }
 
 void loop() {
-  hid.loop();
+  hid.loop();  // this function handles automatic connections / reconnections
 }
