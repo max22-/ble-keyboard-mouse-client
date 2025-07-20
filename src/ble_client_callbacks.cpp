@@ -1,4 +1,4 @@
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 void BLEHIDClientCallbacks::onConnect(NimBLEClient* pClient) { 
     BLE_HID_DEBUG("Connected");

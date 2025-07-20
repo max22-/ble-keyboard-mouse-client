@@ -1,4 +1,4 @@
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 void BLEKeyboard::on_key_pressed(std::function<void (bool, uint8_t)> callback) {
     BLE_HID_DEBUG("setting key pressed callback");

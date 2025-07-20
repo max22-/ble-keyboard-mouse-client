@@ -1,4 +1,4 @@
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 bool BLEHIDDevice::connect(const NimBLEAdvertisedDevice* advDevice) {
     pSvc = nullptr;

@@ -1,4 +1,4 @@
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 void BLEHIDClient::begin(const char *device_name, bool keyboard_enabled, bool mouse_enabled) {
     NimBLEDevice::init(device_name);

@@ -1,4 +1,4 @@
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 void BLEMouse::handle_report(uint8_t *report, size_t len) {
     Serial.print("mouse : ");
