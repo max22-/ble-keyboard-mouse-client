@@ -21,20 +21,21 @@ void BLEHIDClient::loop() {
     const NimBLEScanResults *results = scan_callbacks.results;
     scan_callbacks.results = nullptr;
     if(results && results->getCount() > 0) {
-        BLE_HID_DEBUG("found devices!!!");
+        BLE_HID_DEBUG("found devices:");
         for(auto device: *results) {
+            BLE_HID_DEBUG("* address: %s", device->getAddress().toString().c_str());
             bool is_bonded = NimBLEDevice::isBonded(device->getAddress());
             if(is_bonded)
-                BLE_HID_DEBUG("the device is bonded");
+                BLE_HID_DEBUG("    the device is bonded");
             else
-                BLE_HID_DEBUG("the device is not bonded");
+                BLE_HID_DEBUG("    the device is not bonded");
             if(device->isAdvertisingService(NimBLEUUID("1812")) || is_bonded) {
                 uint16_t appearance = device->getAppearance();
                 if(appearance == 0x3c1 && keyboard_enabled && !keyboard.is_connected()) {
-                    BLE_HID_DEBUG("found a keyboard: 0x%x", device);
+                    BLE_HID_DEBUG("    type: keyboard");
                     keyboard.connect(device);
                 } else if(appearance == 0x3c2 && mouse_enabled && !mouse.is_connected()) {
-                    BLE_HID_DEBUG("found a mouse: 0x%x", device);
+                    BLE_HID_DEBUG("    type: mouse");
                     mouse.connect(device);
                 }
             }
