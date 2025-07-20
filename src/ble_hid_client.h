@@ -45,6 +45,7 @@ private:
     void handle_report(uint8_t *report, size_t len) override;
     bool connect(const NimBLEAdvertisedDevice* advDevice) override;
     friend class BLEHIDClient;
+    bool keys_states[256] = {false};
 };
 
 class BLEMouse : public BLEHIDDevice {

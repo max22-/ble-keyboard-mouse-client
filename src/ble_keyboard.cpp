@@ -6,6 +6,27 @@ void BLEKeyboard::handle_report(uint8_t *report, size_t len) {
         Serial.printf("0x%02x ", report[i]);
     }
     Serial.println();
+
+    for(int i = 1; i < ARRAY_SIZE(keys_states);  i++) {
+        if(keys_states[i]) {
+            bool found = false;
+            for(int j = 2; j < len; j++) {
+                if(report[j] == i) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                BLE_HID_DEBUG("key 0x%02x released", i);
+                keys_states[i] = false;
+            }
+        }
+    }
+    for(int j = 2; j < len; j++) {
+        if(report[j] != 0 && !keys_states[report[j]])
+            BLE_HID_DEBUG("key 0x%02x pressed", report[j]);
+        keys_states[report[j]] = true;
+    }
 }
 
 bool BLEKeyboard::connect(const NimBLEAdvertisedDevice* advDevice) {
