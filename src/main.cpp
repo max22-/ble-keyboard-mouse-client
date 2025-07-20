@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "ble_hid_client.h"
+#include "ble_keyboard_mouse_client.h"
 
 BLEHIDClient hid;
 
